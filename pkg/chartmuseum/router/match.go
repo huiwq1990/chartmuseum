@@ -56,7 +56,7 @@ func match(routes []*Route, method string, url string, contextPath string, depth
 	var repo, repoPath, noRepoPath string
 	var startIndex, numNoRepoPathParts int
 	var tryRepoRoutes bool
-
+	// 用户设置contextPath，将contextPath从url里去除
 	if contextPath != "" {
 		if url == contextPath {
 			url = "/"
@@ -66,7 +66,7 @@ func match(routes []*Route, method string, url string, contextPath string, depth
 			return nil, nil
 		}
 	}
-
+	// 判断是否为health接口
 	if url == "/health" && method == http.MethodGet {
 		for _, route := range routes {
 			if route.Path == "/health" {
@@ -74,17 +74,18 @@ func match(routes []*Route, method string, url string, contextPath string, depth
 			}
 		}
 	}
-
+	// 判断是否为api开头的请求
 	isApiRoute := checkApiRoute(url)
 	if isApiRoute {
 		startIndex = 2
 	} else {
 		startIndex = 1
 	}
-
+	// 拆分url
 	pathSplit := strings.Split(url, "/")
-
+	// 需要通过--depth-dynamic true开启，repo的层级可以动态设置
 	if depthdynamic {
+		// 匹配当前请求符合
 		for _, route := range routes {
 			if isApiRoute {
 				if !strings.HasPrefix(route.Path, "/api") {
@@ -95,6 +96,7 @@ func match(routes []*Route, method string, url string, contextPath string, depth
 					continue
 				}
 			}
+			// 查看url是否匹配route的模式，depth代表仓库的层级
 			depth = getDepth(url, route.Path)
 			if depth >= 0 {
 				break

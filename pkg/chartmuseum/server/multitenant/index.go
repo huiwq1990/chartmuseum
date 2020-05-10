@@ -37,7 +37,7 @@ func (server *MultiTenantServer) getIndexFile(log cm_logger.LoggingFn, repo stri
 		)
 		return nil, &HTTPError{500, errStr}
 	}
-
+	// 从文件系统中获取真实的chart文件列表
 	fo := <-server.getChartList(log, repo)
 
 	if fo.err != nil {
@@ -47,10 +47,11 @@ func (server *MultiTenantServer) getIndexFile(log cm_logger.LoggingFn, repo stri
 		)
 		return nil, &HTTPError{500, errStr}
 	}
-
+	// 获取索引文件中的char列表，index-cache.yaml
 	objects := server.getRepoObjectSlice(entry)
+	// 对比存储系统中的列表和索引中的列表
 	diff := cm_storage.GetObjectSliceDiff(objects, fo.objects, server.TimestampTolerance)
-
+	// 如果没有变化，则返回
 	// return fast if no changes
 	if !diff.Change {
 		log(cm_logger.DebugLevel, "No change detected between cache and storage",
@@ -62,7 +63,7 @@ func (server *MultiTenantServer) getIndexFile(log cm_logger.LoggingFn, repo stri
 	log(cm_logger.DebugLevel, "Change detected between cache and storage",
 		"repo", repo,
 	)
-
+	// 重新生成仓库索引
 	ir := <-server.regenerateRepositoryIndex(log, entry, diff)
 	newRepoIndex := ir.index
 

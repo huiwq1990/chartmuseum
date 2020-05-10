@@ -72,23 +72,24 @@ func (server *MultiTenantServer) primeCache() error {
 	}
 	return nil
 }
-
+// 从文件存储中获取chart列表
 // getChartList fetches from the server and accumulates concurrent requests to be fulfilled all at once.
 func (server *MultiTenantServer) getChartList(log cm_logger.LoggingFn, repo string) <-chan fetchedObjects {
 	ch := make(chan fetchedObjects, 1)
 	tenant := server.Tenants[repo]
 
 	tenant.FetchedObjectsLock.Lock()
+	// 加入等待队列
 	tenant.FetchedObjectsChans = append(tenant.FetchedObjectsChans, ch)
-
+	// 如果等于1，说明已经有人在执行获取命令
 	if len(tenant.FetchedObjectsChans) == 1 {
 		// this unlock is wanted, while fetching the list, allow other channeled requests to be added
 		tenant.FetchedObjectsLock.Unlock()
-
+		// 从存储上获取chart列表，这块比价耗时
 		objects, err := server.fetchChartsInStorage(log, repo)
 
 		tenant.FetchedObjectsLock.Lock()
-
+		// 将数据分发给其它请求
 		// flush every other consumer that also wanted the index
 		for _, foCh := range tenant.FetchedObjectsChans {
 			foCh <- fetchedObjects{objects, err}
@@ -327,11 +328,12 @@ func (server *MultiTenantServer) initCacheEntry(log cm_logger.LoggingFn, repo st
 			RegenerationLock:   &sync.Mutex{},
 		}
 	}
-
+	// 没有配置外部缓存，使用map存储
 	if server.ExternalCacheStore == nil {
 		var ok bool
 		entry, ok = server.InternalCacheStore[repo]
 		if !ok {
+			// 缓存不存在，从后端存储实现中读取，如读取仓库下的index.yaml文件
 			repoIndex := server.newRepositoryIndex(log, repo)
 			entry = &cacheEntry{
 				RepoName:  repo,
@@ -343,6 +345,7 @@ func (server *MultiTenantServer) initCacheEntry(log cm_logger.LoggingFn, repo st
 				"repo", repo,
 			)
 		}
+	// 使用外部缓存，目前只支持redis
 	} else {
 		content, err = server.ExternalCacheStore.Get(repo)
 		if err != nil {

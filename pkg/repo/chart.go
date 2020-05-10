@@ -57,7 +57,8 @@ func ChartPackageFilenameFromContent(content []byte) (string, error) {
 	filename := fmt.Sprintf("%s-%s.%s", meta.Name, meta.Version, ChartPackageFileExtension)
 	return filename, nil
 }
-
+// 上传char包时，可以从文件内容中，即object.Content中获取chart的版本号
+// 构建index-cache.yaml时，object.content是空的，需要通过chart的filename构建
 // ChartVersionFromStorageObject returns a chart version from a storage object
 func ChartVersionFromStorageObject(object storage.Object) (*helm_repo.ChartVersion, error) {
 	if len(object.Content) == 0 {
@@ -98,7 +99,7 @@ func chartFromContent(content []byte) (*helm_chart.Chart, error) {
 	chart, err := loader.LoadArchive(bytes.NewBuffer(content))
 	return chart, err
 }
-
+// 从文件名称中获取chartversion信息，helloworld-0.1.1.tgz 转换为 helloworld 0.1.1
 func emptyChartVersionFromPackageFilename(filename string) *helm_repo.ChartVersion {
 	noExt := strings.TrimSuffix(pathutil.Base(filename), fmt.Sprintf(".%s", ChartPackageFileExtension))
 	parts := strings.Split(noExt, "-")

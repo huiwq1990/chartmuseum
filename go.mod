@@ -17,6 +17,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-contrib/size v0.0.0-20200226145816-24aa35f64b9f
 	github.com/gin-gonic/gin v1.5.0
+	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/go-redis/redis v6.15.7+incompatible
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
@@ -28,5 +29,6 @@ require (
 	github.com/yuin/gopher-lua v0.0.0-20191220021717-ab39c6098bdb // indirect
 	github.com/zsais/go-gin-prometheus v0.1.0
 	go.uber.org/zap v1.10.0
+	google.golang.org/appengine v1.6.5 // indirect
 	helm.sh/helm/v3 v3.1.2
 )
